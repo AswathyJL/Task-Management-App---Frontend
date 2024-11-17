@@ -1,60 +1,103 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
+import { addTaskAPI } from '../services/allAPI';
+import { addTaskResponseContext } from '../context/ContextApi';
 
-const AddTask = ({ onSubmit }) => {
+
+const AddTask = () => {
+  const {addTaskResponse, setAddTaskResponse} = useContext(addTaskResponseContext)
   const [show, setShow] = useState(false);
   const [task, setTask] = useState({
     title: '',
     description: '',
-    image: '',
     startDate: '',
     endDate: '',
     status: 'Not Yet Started',
     progress: 0,
   });
+  // console.log(task);
+  
 
   const handleClose = () => {
     setTask({
       title: '',
       description: '',
-      image: '',
       startDate: '',
       endDate: '',
       status: 'Not Yet Started',
-      progress: 0,
+      progress: '0',
     });
     setShow(false)
   }
   const handleShow = () => setShow(true);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setTask((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
+  const handleAddTask = async (e) => {
+    e.preventDefault()
+    const {title,startDate,endDate,description,status,progress} = task
 
-  const handleFileChange = (e) => {
-    setTask((prev) => ({
-      ...prev,
-      image: e.target.files[0], // Store the file
-    }));
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
+    // console.log(`inside handle task`);
+    
     // Validate that the end date is on or after the start date
-    const startDate = new Date(task.startDate);
-    const endDate = new Date(task.endDate);
-    if (endDate < startDate) {
+    const start = new Date(task.startDate);
+    const end= new Date(task.endDate);
+    if (end < start) {
       alert('End date must be on or after the start date. Please correct it.');
       return; // Prevent form submission
     }
-    alert(`Task added`)
-    handleClose();
-  };
 
+    if(title && startDate && endDate && description && status && progress)
+    {
+      // console.log(`proceeding to api call`);
+      
+      // proceed to api
+      const reqBody = new FormData()
+      reqBody.append("title",title)
+      reqBody.append("startDate",startDate)
+      reqBody.append("endDate",endDate)
+      reqBody.append("description",description)
+      reqBody.append("status",status)
+      reqBody.append("progress",progress)
+      const token = sessionStorage.getItem("token")
+      if(token)
+      {
+        // console.log(`token found`);
+        
+        const reqHeaders = {
+          "Content-Type":"multipart/form-data",
+          "Authorization":`Bearer ${token}`
+        }
+
+        // make api call
+        try {
+          // console.log(`inside try calling api`);
+          
+          const result = await addTaskAPI(reqBody,reqHeaders)
+          if(result.status==200)
+          {
+            // console.log(`called api success`);
+            
+            alert("Task added successfully")
+            setAddTaskResponse(result)
+            handleClose()
+          }
+          else
+          {
+            alert(result.response.data)
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      }
+      else
+      {
+        console.log(`no token found`);
+      }
+    }
+    else
+    {
+      console.log("Validation failed: Required fields are missing");
+    }
+  }
   return (
     <>
       <Button variant="warning" onClick={handleShow}>
@@ -66,14 +109,14 @@ const AddTask = ({ onSubmit }) => {
           <Modal.Title className='text-primary fw-semibold'>Add New Task</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form onSubmit={handleSubmit}>
+          <Form >
             <Form.Group className="mb-3" controlId="taskTitle">
               <Form.Label>Task Title</Form.Label>
               <Form.Control
                 type="text"
                 name="title"
                 value={task.title}
-                onChange={handleChange}
+                onChange={e=>setTask({...task,title:e.target.value})}
                 placeholder="Enter task title"
                 required
               />
@@ -85,20 +128,10 @@ const AddTask = ({ onSubmit }) => {
                 as="textarea"
                 name="description"
                 value={task.description}
-                onChange={handleChange}
+                onChange={e=>setTask({...task,description:e.target.value})}
                 placeholder="Enter task description"
                 rows={3}
                 required
-              />
-            </Form.Group>
-
-            <Form.Group className="mb-3" controlId="taskImage">
-              <Form.Label>Task Image (Optional)</Form.Label>
-              <Form.Control
-                type="file"
-                name="image"
-                accept="image/*"
-                onChange={handleFileChange}
               />
             </Form.Group>
 
@@ -108,7 +141,7 @@ const AddTask = ({ onSubmit }) => {
                 type="date"
                 name="startDate"
                 value={task.startDate}
-                onChange={handleChange}
+                onChange={e=>setTask({...task,startDate:e.target.value})}
                 required
               />
             </Form.Group>
@@ -119,7 +152,7 @@ const AddTask = ({ onSubmit }) => {
                 type="date"
                 name="endDate"
                 value={task.endDate}
-                onChange={handleChange}
+                onChange={e=>setTask({...task,endDate:e.target.value})}
                 required
               />
             </Form.Group>
@@ -129,7 +162,7 @@ const AddTask = ({ onSubmit }) => {
               <Form.Select
                 name="status"
                 value={task.status}
-                onChange={handleChange}
+                onChange={e=>setTask({...task,status:e.target.value})}
               >
                 <option>Not Yet Started</option>
                 <option>Ongoing</option>
@@ -144,15 +177,13 @@ const AddTask = ({ onSubmit }) => {
                 type="number"
                 name="progress"
                 value={task.progress}
-                onChange={handleChange}
+                onChange={e=>setTask({...task,progress:e.target.value})}
                 min="0"
                 max="100"
               />
             </Form.Group>
 
-            <Button variant="primary" type="submit">
-              Add Task
-            </Button>
+            <button className='btn btn-warning' onClick={handleAddTask} type="button">Add Task</button>
           </Form>
         </Modal.Body>
       </Modal>

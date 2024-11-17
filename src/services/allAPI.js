@@ -16,7 +16,7 @@ export const allTaskAPI = async (reqHeader)=>{
     return await commonAPI("GET",`${SERVER_URL}/all-tasks`,{},reqHeader)
 }
 
-// addTaskAPI - called by alltask component
+// addTaskAPI - called by addTask component
 export const addTaskAPI = async (reqbody,reqHeader)=>{
     return await commonAPI("POST",`${SERVER_URL}/add-task`,reqbody,reqHeader)
 }
@@ -28,6 +28,6 @@ export const editTaskAPI = async (id,reqbody,reqHeader)=>{
 
 // removeTaskAPI - called by taskCard component
 export const removeTaskAPI = async (id,reqHeader)=>{
-    return await commonAPI("PUT",`${SERVER_URL}/task/${id}/remove`,{},reqHeader)
+    return await commonAPI("DELETE",`${SERVER_URL}/task/${id}/remove`,{},reqHeader)
 }
 

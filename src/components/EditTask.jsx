@@ -1,18 +1,47 @@
-import React, { useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import { Button, Form, Modal } from 'react-bootstrap';
+import { editTaskAPI } from '../services/allAPI';
+import { editTaskResponseContext } from '../context/ContextApi';
 
-const EditTask = ({ onSubmit }) => {
+
+const EditTask = ({displayTask}) => {
+  const {editTaskResponse, setEditTaskResponse} = useContext(editTaskResponseContext)
+  const [displayStartDate, setDisplayStartDate] = useState('');
+  const [displayEndDate, setDisplayEndDate] = useState('');
   const [show, setShow] = useState(false);
   const [task, setTask] = useState({
-    title: '',
-    description: '',
-    image: '',
-    startDate: '',
-    endDate: '',
-    status: 'Not Yet Started',
-    progress: 0,
+    id: displayTask._id || '',
+    title: displayTask.title || '',
+    description: displayTask.description || '',
+    startDate: displayTask.startDate || '',
+    endDate: displayTask.endDate || '',
+    status: displayTask.status || 'Not Yet Started',
+    progress: displayTask.progress || 0,
   });
 
+  // console.log(task);
+
+  useEffect(() => {
+    setTask({
+      id: displayTask._id || '',
+      title: displayTask.title || '',
+      description: displayTask.description || '',
+      startDate: displayTask.startDate || '',
+      endDate: displayTask.endDate || '',
+      status: displayTask.status || 'Not Yet Started',
+      progress: displayTask.progress || 0,
+    });
+    setDisplayStartDate(formatDate(task.startDate))
+    setDisplayEndDate(formatDate(task.endDate))
+  }, [displayTask]);
+
+  const formatDate = (date) => {
+    const d = new Date(date);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0'); // Months are zero-indexed
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
   const handleClose = () => {
     setTask({
       title: '',
@@ -27,32 +56,56 @@ const EditTask = ({ onSubmit }) => {
   }
   const handleShow = () => setShow(true);
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setTask((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
-
-  const handleFileChange = (e) => {
-    setTask((prev) => ({
-      ...prev,
-      image: e.target.files[0], // Store the file
-    }));
-  };
-
-  const handleSubmit = (e) => {
+  const handleEditTask = async (e) => {
     e.preventDefault();
-    // Validate that the end date is on or after the start date
-    const startDate = new Date(task.startDate);
-    const endDate = new Date(task.endDate);
-    if (endDate < startDate) {
+    
+    console.log(task); // Log task data before submitting
+  
+    const { id, title, startDate, endDate, description, status, progress } = task;
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+  
+    if (end < start) {
       alert('End date must be on or after the start date. Please correct it.');
-      return; // Prevent form submission
+      return;
     }
-    alert(`Task Updated`)
-    handleClose();
+  
+    if (title && startDate && endDate && description && status && progress) {
+      const reqBody = new FormData();
+      reqBody.append("title", title);
+      reqBody.append("startDate", startDate);
+      reqBody.append("endDate", endDate);
+      reqBody.append("description", description);
+      reqBody.append("status", status);
+      reqBody.append("progress", progress);
+      console.log(reqBody.get("progress"));
+      const token = sessionStorage.getItem("token");
+      if (token) {
+        const reqHeaders = {
+          'Content-Type': 'application/json',
+          "Authorization": `Bearer ${token}`,
+        };
+  
+        try {
+          const result = await editTaskAPI(id, reqBody, reqHeaders);
+          if (result.status == 200) {
+            alert("Task updated successfully");
+            console.log(result);
+            
+            setEditTaskResponse(result);
+            handleClose();
+          } else {
+            alert(result.response.data);
+          }
+        } catch (err) {
+          console.log(err);
+        }
+      } else {
+        console.log("No token found");
+      }
+    } else {
+      alert("Validation failed: Required fields are missing");
+    }
   };
 
   return (
@@ -66,14 +119,14 @@ const EditTask = ({ onSubmit }) => {
           <Modal.Title className='text-primary fw-semibold'>Update Task</Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Form onSubmit={handleSubmit}>
+          <Form>
             <Form.Group className="mb-3" controlId="taskTitle">
               <Form.Label>Task Title</Form.Label>
               <Form.Control
                 type="text"
                 name="title"
                 value={task.title}
-                onChange={handleChange}
+                onChange={e=>setTask({...task,title:e.target.value})}
                 placeholder="Enter task title"
                 required
               />
@@ -85,41 +138,31 @@ const EditTask = ({ onSubmit }) => {
                 as="textarea"
                 name="description"
                 value={task.description}
-                onChange={handleChange}
+                onChange={e=>setTask({...task,description:e.target.value})}
                 placeholder="Enter task description"
                 rows={3}
                 required
               />
             </Form.Group>
 
-            <Form.Group className="mb-3" controlId="taskImage">
-              <Form.Label>Task Image (Optional)</Form.Label>
-              <Form.Control
-                type="file"
-                name="image"
-                accept="image/*"
-                onChange={handleFileChange}
-              />
-            </Form.Group>
-
             <Form.Group className="mb-3" controlId="startDate">
-              <Form.Label>Start Date</Form.Label>
+              <Form.Label>Start Date : {displayStartDate}</Form.Label>
               <Form.Control
                 type="date"
                 name="startDate"
                 value={task.startDate}
-                onChange={handleChange}
+                onChange={e=>setTask({...task,startDate:e.target.value})}
                 required
               />
             </Form.Group>
 
             <Form.Group className="mb-3" controlId="endDate">
-              <Form.Label>End Date</Form.Label>
+              <Form.Label>End Date : {displayEndDate}</Form.Label>
               <Form.Control
                 type="date"
                 name="endDate"
                 value={task.endDate}
-                onChange={handleChange}
+                onChange={e=>setTask({...task,endDate:e.target.value})}
                 required
               />
             </Form.Group>
@@ -129,7 +172,7 @@ const EditTask = ({ onSubmit }) => {
               <Form.Select
                 name="status"
                 value={task.status}
-                onChange={handleChange}
+                onChange={e=>setTask({...task,status:e.target.value})}
               >
                 <option>Not Yet Started</option>
                 <option>Ongoing</option>
@@ -144,13 +187,13 @@ const EditTask = ({ onSubmit }) => {
                 type="number"
                 name="progress"
                 value={task.progress}
-                onChange={handleChange}
+                onChange={e=>setTask({...task,progress:e.target.value})}
                 min="0"
                 max="100"
               />
             </Form.Group>
 
-            <Button variant="primary" type="submit">
+            <Button onClick={handleEditTask} variant="warning" type="button">
               Update Task
             </Button>
           </Form>
