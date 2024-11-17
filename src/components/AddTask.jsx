@@ -63,7 +63,7 @@ const AddTask = () => {
         // console.log(`token found`);
         
         const reqHeaders = {
-          "Content-Type":"multipart/form-data",
+          "Content-Type":"application/json",
           "Authorization":`Bearer ${token}`
         }
 

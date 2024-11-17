@@ -14,7 +14,7 @@ const Home = () => {
                         <p style={{textAlign:'justify'}}>Lorem ipsum dolor sit amet consectetur adipisicing elit. Et delectus asperiores magni dignissimos. Pariatur harum natus, veniam enim at ab totam nihil nam maiores similique, incidunt vitae maxime nulla nisi!</p>
                         {
                             sessionStorage.getItem("token") ?
-                            <Link to={'/tasks'} className='btn btn-warning'>START TO EXPLORE</Link>
+                            <Link to={'/tasks'} className='btn btn-warning'>MANAGE TASKS HERE</Link>
                             :
                             <Link to={'/login'} className='btn btn-warning'>START TO EXPLORE</Link>
                         }
