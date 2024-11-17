@@ -12,8 +12,8 @@ export const loginAPI = async (reqbody)=>{
 }
 
 // allTaskAPI called by allTasks Component when page loaded in browser
-export const allTaskAPI = async (reqHeader)=>{
-    return await commonAPI("GET",`${SERVER_URL}/all-tasks`,{},reqHeader)
+export const allTaskAPI = async (searchKey,reqHeader)=>{
+    return await commonAPI("GET",`${SERVER_URL}/all-tasks?search=${searchKey}`,{},reqHeader)
 }
 
 // addTaskAPI - called by addTask component

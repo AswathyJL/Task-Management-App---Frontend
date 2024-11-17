@@ -10,10 +10,12 @@ const AllTask = () => {
   const {editTaskResponse, setEditTaskResponse} = useContext(editTaskResponseContext)
   const {removeTaskResponse, setRemoveTaskResponse} = useContext(removeTaskResponseContext)
   const {addTaskResponse, setAddTaskResponse} = useContext(addTaskResponseContext)
-  const [username,setUsername]= useState("")
-  const [userTasks,setUserTasks] = useState([])
 
-  const [totalTasks, setTotalTasks] = useState("")
+  const [searchKey,setSearchKey] = useState("")
+  const [username,setUsername]= useState("")
+
+  // pagination states and variables
+  const [userTasks,setUserTasks] = useState([])
   const [currentPage, setCurrentPage] = useState(1)
   const cardsPerPage = 6
   const totalPage = Math.ceil(userTasks?.length/cardsPerPage)
@@ -31,10 +33,9 @@ const AllTask = () => {
 
   useEffect(()=>{
     getUserTasks()
-    setTotalTasks(userTasks?.length)
-  },[addTaskResponse, removeTaskResponse, editTaskResponse])
+  },[addTaskResponse, removeTaskResponse, editTaskResponse, searchKey])
 
-
+  // function to get user tasks
   const getUserTasks =  async() =>{
     const token = sessionStorage.getItem("token")
     if(token)
@@ -43,7 +44,7 @@ const AllTask = () => {
         "Authorization" : `Bearer ${token}`
       }
       try {
-        const result = await allTaskAPI(reqHeaders)
+        const result = await allTaskAPI(searchKey,reqHeaders)
         console.log(result);
         if(result.status == 200)
         {
@@ -57,6 +58,7 @@ const AllTask = () => {
     }
   }
 
+  // pagination - funtion to get next page
   const navigateToNextPage = ()=>{
     if(currentPage!= totalPage)
     {
@@ -64,10 +66,12 @@ const AllTask = () => {
     }
   }
 
+  // pagination - funtion to get current page
   const navigateToCurrentPage = (page) => {
     setCurrentPage(page)
   }
 
+  // pagination - funtion to get previous page
   const navigateToPreviousPage = ()=>{
     if(currentPage!= 1)
     {
@@ -95,8 +99,10 @@ const AllTask = () => {
             <div className='text-danger fw-bolder'>Taks not yet added!!!</div>
           }
         </Row>
+        {/* pagination */}
         <div className='d-flex justify-content-center'>
                 <ul className="pagination">
+                  {/* backward button */}
                     <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
                         <a
                             className="page-link bg-primary"
@@ -106,6 +112,7 @@ const AllTask = () => {
                             &laquo;
                         </a>
                     </li>
+                    {/* pages buttons */}
                     {
                         Array.from({ length: totalPage }, (_, i) => (
                             <li
@@ -122,6 +129,7 @@ const AllTask = () => {
                             </li>
                         ))
                     }
+                    {/* forwared button */}
                     <li className={`page-item ${currentPage === totalPage ? 'disabled' : ''}`}>
                         <a
                             className="page-link bg-primary"
