@@ -1,9 +1,19 @@
-import React from 'react'
+import React, { useContext, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import main from '../assets/main.png'
+import { tokenAuthContext } from '../context/AuthContextAPI'
 
 
 const Home = () => {
+    const {isAuthorised,setIsAuthorised} = useContext(tokenAuthContext)
+  useEffect(()=>{
+    if(sessionStorage.getItem("token"))
+      {
+        setIsAuthorised(true)
+      }else{
+        setIsAuthorised(false)
+      }
+  },[isAuthorised])
   return (
     <div style={{minHeight:'100vh'}} className="d-flex justify-content-center align-items-center w-100">
             <div className='container'>
