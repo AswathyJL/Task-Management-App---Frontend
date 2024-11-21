@@ -11,7 +11,6 @@ const Auth = ({insideRegister}) => {
   const [inputData,setInputData] = useState({
     username:"", email:"", password:""
   })
-  console.log(inputData);
 
   // Validation patterns
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
@@ -27,8 +26,6 @@ const Auth = ({insideRegister}) => {
     e.preventDefault()
     console.log(`inside handleRegister`);
 
-    e.preventDefault();
-    console.log('inside handleRegister');
 
     if (!validateEmail(inputData.email)) {
       alert('Please enter a valid email address.');
